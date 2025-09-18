@@ -1,0 +1,15 @@
+# venv
+.venv/
+
+# pycache
+__pycache__/
+
+# data
+app/data/
+data/
+
+# test
+test/
+
+# image
+images/
