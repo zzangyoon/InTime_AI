@@ -1,5 +1,6 @@
 # Query
 from app.core.db import get_connection
+from app.core.errors import ErrorMessage
 from datetime import datetime
 from zoneinfo import ZoneInfo
 
@@ -20,7 +21,7 @@ def insert_member(employee_id: str, name: str):
     conn.close()
 
 # attendance
-def insert_attendance(employee_id: str, method: str, img_filename: str):
+def insert_attendance(employee_id: str, method: str, img_filename: str, mode: str):
     try:
         conn = get_connection()
         cursor = conn.cursor()
@@ -28,27 +29,45 @@ def insert_attendance(employee_id: str, method: str, img_filename: str):
         # 현재 시간(KST)
         now_datetime = datetime.now(ZoneInfo("Asia/Seoul"))
         now_kst = now_datetime.strftime("%Y-%m-%d %H:%M:%S")
-
-        # 날짜만 뽑기
         today = now_datetime.date()
-
-        cursor.execute("""
-            INSERT INTO attendance(
+        
+        if mode == "check_in":
+            cursor.execute("""
+                INSERT INTO attendance(
+                    employee_id
+                    , check_date
+                    , check_in
+                    , check_in_method
+                    , check_in_img
+                ) VALUES (?, ?, ?, ?, ?)
+            """, (
                 employee_id
-                , check_date
-                , check_in
-                , check_in_method
-                , check_in_img
-            ) VALUES (?, ?, ?, ?, ?)
-        """, (
-            employee_id
-            , today
-            , now_kst
-            , method
-            , img_filename
-        ))
+                , today
+                , now_kst
+                , method
+                , img_filename
+            ))
+        elif mode == "check_out":
+            cursor.execute("""
+                INSERT INTO attendance(
+                    employee_id
+                    , check_date
+                    , check_out
+                    , check_out_method
+                    , check_out_img
+                ) VALUES (?, ?, ?, ?, ?)
+            """, (
+                employee_id
+                , today
+                , now_kst
+                , method
+                , img_filename
+            ))
+        else:
+            return {"success" : False, "message" : ErrorMessage.INVALID_MODE}
+        
         conn.commit()
-        return {"success" : True, "message" : "등록 성공"}
+        return {"success" : True, "message" : f"{mode} 등록 성공"}
 
     except Exception as e:
         return {"success" : False, "message" : str(e)}
