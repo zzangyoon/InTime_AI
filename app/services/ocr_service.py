@@ -22,12 +22,9 @@ async def ocr_idcards(files: list[UploadFile], mode: str):
         img = cv2.imdecode(np_arr, cv2.IMREAD_COLOR)
 
         if img is None:
-            response.append({
-                "filename": file.filename,
-                "code": ErrorCode.DECODE_FAILED,
-                "status": "error",
-                "message": ErrorMessage.DECODE_FAILED
-            })
+            response.append(
+                create_error_response(file.filename, ErrorCode.DECODE_FAILED, ErrorMessage.DECODE_FAILED)
+            )
             continue
 
         # 파일 저장명 생성
@@ -42,8 +39,18 @@ async def ocr_idcards(files: list[UploadFile], mode: str):
         img_flipped = cv2.flip(img, 1)
 
         results = ocr.predict(input = img_flipped)
-        
+
+        if not results or not results[0]["rec_texts"]:
+            print("!!! results not found")
+            response.append(
+                create_error_response(file.filename, ErrorCode.ID_NOT_FOUND, ErrorMessage.ID_NOT_FOUND)
+            )
+            continue
+
         text_list = results[0]["rec_texts"]
+
+        final_id = None
+        name = None
 
         for text in text_list:
             if "wanted" in text :
@@ -51,16 +58,23 @@ async def ocr_idcards(files: list[UploadFile], mode: str):
             elif "ID" in text:
                 no_space = "".join(text.split())
                 if len(no_space) < 6:
-                    response.append({
-                        "filename": file.filename,
-                        "code": ErrorCode.ID_NOT_FOUND,
-                        "status": "error",
-                        "message": ErrorMessage.ID_NOT_FOUND
-                    })
+                    response.append(
+                        create_error_response(file.filename, ErrorCode.ID_NOT_FOUND, ErrorMessage.ID_NOT_FOUND)
+                    )
                     continue
                 final_id = no_space[-6:]
             else :
                 name = text
+                
+        if not final_id:
+            response.append(
+                create_error_response(file.filename, ErrorCode.ID_NOT_FOUND, ErrorMessage.ID_NOT_FOUND)
+            )
+
+        if not name:
+            response.append(
+                create_error_response(file.filename, ErrorCode.NAME_NOT_FOUND, ErrorMessage.NAME_NOT_FOUND)
+            )
         
         print(f"이름 : {name}, 사원번호 : {final_id}")
 
@@ -96,3 +110,11 @@ async def ocr_idcards(files: list[UploadFile], mode: str):
         })
 
     return response
+
+def create_error_response(filename, code, message):
+    return {
+        "filename": filename,
+        "code": code,
+        "status": "error",
+        "message": message
+    }
