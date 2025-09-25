@@ -1,0 +1,22 @@
+날짜 : {date}
+
+아래는 사원별 근태 데이터 입니다:
+
+{attendance_summary}
+
+컬럼의 의미는 아래와 같습니다.
+employee_id : 사원번호,
+check_date : 근무 날짜,
+name : 이름,
+check_in : 출근 시간,
+check_out : 퇴근 시간,
+check_in_method : 출근 방법(FD, FR : 얼굴인식 / ID : 사원증),
+check_out_method : 퇴근 방법(FD, FR : 얼굴인식 / ID : 사원증),
+memo_in	: 비고,
+memo_out : 비고,
+is_late : 지각 유무 (T/F)
+
+데이터를 참고하여 사원별 근태 보고서를 표로 작성해주세요.
+데이터를 통해 총 근무시간도 넣어주세요.
+
+그리고, 직원 출근/퇴근 및 특이사항을 요약해주세요.
